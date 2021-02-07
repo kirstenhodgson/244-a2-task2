@@ -28,10 +28,12 @@ palmetto <- read.csv(here("data", "palmetto.csv")) %>%
 palmetto$species <- as.factor(palmetto$species)
 
 ```
+Data source: 
+Abrahamson, W.G. 2019. Survival, growth and biomass estimates of two dominant palmetto species of south-central Florida from 1981 - 2017, ongoing at 5-year intervals ver 1. Environmental Data Initiative. https://doi.org/10.6073/pasta/f2f96ec76fbbd4b9db431c79a770c4d5
 
 ### Data Visualization
 
-```{r}
+```{r, fig.align = 'center'}
 #Visualizing differences in height
 ggplot(data = palmetto, aes(x = species_name, 
                                     y = height, 
@@ -42,11 +44,12 @@ ggplot(data = palmetto, aes(x = species_name,
   labs(x = "\nSpecies", y = "Height (cm)\n") +
   scale_color_manual(values = c("darkgreen", "chartreuse3"))
 ```
-**Figure1.** Height (cm) distributed by species for *Sabal etonia* (dark green) and *Serenoa repens* (light green). Width and darkness of beeswarm plot indicates number of observations at each height for that species.
+
+**Figure 1.** Height (cm) distributed by species for *Sabal etonia* (dark green) and *Serenoa repens* (light green). Width and darkness of beeswarm plot indicates number of observations at each height for that species.
 
 This beeswarm shows that overall, *Sabal etonia* and *Serenoa repens* are similar in height. While *S. repens* appears to have more observations of larger height, and has a higher maximum observed height than *S. etonia*, without further analysis it cannot be determined whether this difference is the result of sampling variability or indicative of a trend.
 
-```{r}
+```{r, fig.align = 'center'}
 #Visualizing differences in canopy length and canopy width
   ggplot(data = palmetto, aes(x = length, 
                               y = width, 
@@ -58,11 +61,12 @@ This beeswarm shows that overall, *Sabal etonia* and *Serenoa repens* are simila
   labs(x = "\nCanopy length (cm)", y = "Canopy width (cm)\n") +
   scale_color_manual(values = c("darkgreen", "chartreuse3"))
 ```
+
 **Figure 2.** Canopy width (cm) vs. canopy length (cm) for *Sabal etonia* (dark green) and *Serenoa repens* (light green).
 
 Both species appear to have a near linear relationship between canopy width and canopy height. However, *S. etonia* does appear to have more longer canopies overall, as well as more canopies that are longer and narrower than *S repens*.
 
-```{r}
+```{r, fig.align = 'center'}
 #Visualizing green leaves
   ggplot(data = palmetto, aes(x = species_name, 
                              y = green_lvs, 
@@ -73,6 +77,7 @@ Both species appear to have a near linear relationship between canopy width and 
   labs(x = "Species", y = "Number of green leaves") +
   scale_color_manual(values = c("darkgreen", "chartreuse3"))
 ```
+
 **Figure 3.** Distribution of the number of green leaves observed on individual of *Sabal etonia* (dark green) and *Serenoa repens* (light green). Darker points indicate more observations of that number of green leaves per species.
 
 While *S. etonia* and *S. repens* have similar lower ends of their distributions of green leaves, the upper end of *S. repens* distribution appears to be greater than that of *S. etonia*.
@@ -98,13 +103,14 @@ palmetto_blr_tidy <- tidy(palmetto_blr)
 blr_table <- palmetto_blr_tidy %>% 
   mutate_if(is.numeric, funs(as.character(signif(.,3)))) %>% 
   kable(col.names = c("Variable", "Estimate", "Standard Error", "Statistic", "p-value"),  digits = 4) %>% 
-  kable_styling(full_width = F)
+  kable_styling(full_width = T)
 
 blr_table
 ```
 
 ### Evaluating model success
 
+**Table 2.** The number of correct, number of incorrect, and percent of correct predictions from `palmetto_blr` binomial linear regression model. The model uses height, crown length, crown width, and number of green leaves to to correctly predict palmetto species more than 90% of the time (92.6% accuracy for *S. etonia*, 90.8% accuracy for *S. repens*).
 ```{r}
 blr_fitted <- palmetto_blr %>% 
   broom::augment(type.predict = "response") %>% 
@@ -123,7 +129,7 @@ blr_correct <- blr_fitted %>%
               values_from = number_correct) %>% 
   mutate(percent_correct = ((correct/(correct + incorrect))*100)) %>% 
   kable(col.names = c("Species", "Number correct", "Number incorrect", "Percent correct")) %>% 
-  kable_styling(full_width = F)
+  kable_styling(full_width = T)
 
 blr_correct
 ```
