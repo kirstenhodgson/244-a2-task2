@@ -97,7 +97,7 @@ palmetto_blr_tidy <- tidy(palmetto_blr)
 
 blr_table <- palmetto_blr_tidy %>% 
   mutate_if(is.numeric, funs(as.character(signif(.,3)))) %>% 
-  kable(col.names = c("Variable", "Estimate", "Standard Error", "Statistic", "p-value"), formet = "markdown", digits = 4) %>% 
+  kable(col.names = c("Variable", "Estimate", "Standard Error", "Statistic", "p-value"),  digits = 4) %>% 
   kable_styling(full_width = F)
 
 blr_table
@@ -112,12 +112,19 @@ blr_fitted <- palmetto_blr %>%
                                .fitted <= 0.5 ~ 1))
 
 blr_correct <- blr_fitted %>% 
-  mutate(correct = case_when(predicted == species ~ "Correct",
-                             TRUE ~ "Incorrect")) %>% 
+  mutate(correct = case_when(predicted == species ~ "correct",
+                             TRUE ~ "incorrect")) %>% 
   mutate(species = case_when(species == 1 ~ "Serenoa repens",
                              species == 2 ~ "Sabal etonia")) %>% 
   select(species, .fitted, predicted, correct) %>% 
   group_by(species, correct) %>% 
-  summarize(number_correct = n()) 
+  summarize(number_correct = n())  %>% 
+  pivot_wider(names_from = correct,
+              values_from = number_correct) %>% 
+  mutate(percent_correct = ((correct/(correct + incorrect))*100)) %>% 
+  kable(col.names = c("Species", "Number correct", "Number incorrect", "Percent correct")) %>% 
+  kable_styling(full_width = F)
+
+blr_correct
 ```
 
