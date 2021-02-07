@@ -86,6 +86,7 @@ To classify species based on:
 - canopy width (cm)
 - number of green leaves
 
+**Table 1.** Outcome of binomial linear regression using plant height (height), canopy length (length), canopy width (width), and number of green leaves (green_lvs) as predictor variables of palmetto species. Here, the zero level is *Serenoa repens*, so the estimates represent the change in likelihood that a palmetto is species *Sabal etonia* with each one unit increase in the given predictor variable.
 ```{r}
 palmetto_blr <- glm(species ~ height + length + width + green_lvs,
                     data = palmetto,
@@ -100,5 +101,23 @@ blr_table <- palmetto_blr_tidy %>%
   kable_styling(full_width = F)
 
 blr_table
+```
+
+### Evaluating model success
+
+```{r}
+blr_fitted <- palmetto_blr %>% 
+  broom::augment(type.predict = "response") %>% 
+  mutate(predicted = case_when(.fitted >= 0.5 ~ 2,
+                               .fitted <= 0.5 ~ 1))
+
+blr_correct <- blr_fitted %>% 
+  mutate(correct = case_when(predicted == species ~ "Correct",
+                             TRUE ~ "Incorrect")) %>% 
+  mutate(species = case_when(species == 1 ~ "Serenoa repens",
+                             species == 2 ~ "Sabal etonia")) %>% 
+  select(species, .fitted, predicted, correct) %>% 
+  group_by(species, correct) %>% 
+  summarize(number_correct = n()) 
 ```
 
