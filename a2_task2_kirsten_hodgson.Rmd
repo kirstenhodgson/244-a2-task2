@@ -1,0 +1,104 @@
+---
+title: 'Task 2: Palmetto binary logistic regression'
+author: "Kirsten Hodgson"
+date: "2/6/2021"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(here)
+library(janitor)
+library(ggbeeswarm)
+library(GGally)
+library(broom)
+library(jtools)
+library(kableExtra)
+```
+
+```{r}
+#Read in data
+palmetto <- read.csv(here("data", "palmetto.csv")) %>% 
+  mutate(species_name = case_when(species == 1 ~ "Serenoa repens",
+                             species == 2 ~ "Sabal etonia"))
+
+palmetto$species <- as.factor(palmetto$species)
+
+```
+
+### Data Visualization
+
+```{r}
+#Visualizing differences in height
+ggplot(data = palmetto, aes(x = species_name, 
+                                    y = height, 
+                                    color = species_name)) +
+  geom_beeswarm(alpha = 0.3) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(x = "\nSpecies", y = "Height (cm)\n") +
+  scale_color_manual(values = c("darkgreen", "chartreuse3"))
+```
+**Figure1.** Height (cm) distributed by species for *Sabal etonia* (dark green) and *Serenoa repens* (light green). Width and darkness of beeswarm plot indicates number of observations at each height for that species.
+
+This beeswarm shows that overall, *Sabal etonia* and *Serenoa repens* are similar in height. While *S. repens* appears to have more observations of larger height, and has a higher maximum observed height than *S. etonia*, without further analysis it cannot be determined whether this difference is the result of sampling variability or indicative of a trend.
+
+```{r}
+#Visualizing differences in canopy length and canopy width
+  ggplot(data = palmetto, aes(x = length, 
+                              y = width, 
+                              color = species_name)) +
+  facet_grid(~species_name) +
+  geom_point(alpha = 0.3) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(x = "\nCanopy length (cm)", y = "Canopy width (cm)\n") +
+  scale_color_manual(values = c("darkgreen", "chartreuse3"))
+```
+**Figure 2.** Canopy width (cm) vs. canopy length (cm) for *Sabal etonia* (dark green) and *Serenoa repens* (light green).
+
+Both species appear to have a near linear relationship between canopy width and canopy height. However, *S. etonia* does appear to have more longer canopies overall, as well as more canopies that are longer and narrower than *S repens*.
+
+```{r}
+#Visualizing green leaves
+  ggplot(data = palmetto, aes(x = species_name, 
+                             y = green_lvs, 
+                             color = species_name)) +
+  geom_point(alpha = 0.05) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(x = "Species", y = "Number of green leaves") +
+  scale_color_manual(values = c("darkgreen", "chartreuse3"))
+```
+**Figure 3.** Distribution of the number of green leaves observed on individual of *Sabal etonia* (dark green) and *Serenoa repens* (light green). Darker points indicate more observations of that number of green leaves per species.
+
+While *S. etonia* and *S. repens* have similar lower ends of their distributions of green leaves, the upper end of *S. repens* distribution appears to be greater than that of *S. etonia*.
+
+### Binary logistic regression
+
+To classify species based on:
+
+- plant height (cm)
+- canopy length (cm)
+- canopy width (cm)
+- number of green leaves
+
+```{r}
+palmetto_blr <- glm(species ~ height + length + width + green_lvs,
+                    data = palmetto,
+                    family = "binomial")
+#Non-zero level: 2 (Sabal etonia)
+
+palmetto_blr_tidy <- tidy(palmetto_blr)
+
+blr_table <- palmetto_blr_tidy %>% 
+  mutate_if(is.numeric, funs(as.character(signif(.,3)))) %>% 
+  kable(col.names = c("Variable", "Estimate", "Standard Error", "Statistic", "p-value"), formet = "markdown", digits = 4) %>% 
+  kable_styling(full_width = F)
+
+blr_table
+```
+
